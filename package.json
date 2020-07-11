@@ -1,0 +1,53 @@
+{
+  "name": "imicros-flow-worker",
+  "version": "0.0.1",
+  "author": "Andreas Leinen <andreas.leinen@imicros.de> (www.imicros.de)",
+  "license": "MIT",
+  "description": "Moleculer service for persistent event handling",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest --coverage --no-cache --config=travis.js --silent",
+    "test-local": "jest --coverage --no-cache --config=local.js --silent",
+    "test-admin": "jest test/admin.spec.js --no-cache --config=local.js",
+    "test-pub": "jest test/publisher.spec.js --no-cache --config=local.js",
+    "test-sub": "jest test/subscriber.spec.js --no-cache --config=local.js"
+  },
+  "jest": {
+    "collectCoverageFrom": [
+      "lib/*.js",
+      "lib/util/*.js",
+      "!lib/globals.js"
+    ],
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "/dev/",
+      "/test/"
+    ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/dev/",
+      "/test/"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/al66/imicros-flow-worker.git"
+  },
+  "keywords": [
+    "moleculer",
+    "workflow engine"
+  ],
+  "devDependencies": {
+    "ioredis": "^4.17.3",
+    "jest": "^25.5.4",
+    "kafka-node": "^5.0.0",
+    "moleculer": "^0.14.6",
+    "nats": "^1.4.9"
+  },
+  "dependencies": {
+    "kafkajs": "^1.12.0",
+    "lodash": "^4.17.19",
+    "save-dev": "0.0.1-security",
+    "uuidv4": "^6.0.8"
+  }
+}
