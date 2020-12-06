@@ -8,9 +8,8 @@
   "scripts": {
     "test": "jest --coverage --no-cache --config=travis.js --silent",
     "test-local": "jest --coverage --no-cache --config=local.js --silent",
-    "test-admin": "jest test/admin.spec.js --no-cache --config=local.js",
-    "test-pub": "jest test/publisher.spec.js --no-cache --config=local.js",
-    "test-sub": "jest test/subscriber.spec.js --no-cache --config=local.js"
+    "test-queue": "jest test/queue.spec.js --no-cache --config=local.js",
+    "test-book": "jest test/bookkeeper.spec.js --no-cache --config=local.js"
   },
   "jest": {
     "collectCoverageFrom": [
@@ -38,16 +37,14 @@
     "workflow engine"
   ],
   "devDependencies": {
-    "ioredis": "^4.17.3",
+    "ioredis": "^4.19.2",
     "jest": "^25.5.4",
-    "kafka-node": "^5.0.0",
-    "moleculer": "^0.14.6",
-    "nats": "^1.4.9"
+    "moleculer": "^0.14.11",
+    "nats": "^1.4.12"
   },
   "dependencies": {
-    "kafkajs": "^1.12.0",
-    "lodash": "^4.17.19",
-    "save-dev": "0.0.1-security",
-    "uuidv4": "^6.0.8"
+    "cassandra-driver": "^4.6.1",
+    "lodash": "^4.17.20",
+    "uuidv4": "^6.2.5"
   }
 }

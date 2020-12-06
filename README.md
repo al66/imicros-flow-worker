@@ -7,53 +7,78 @@ This service is part of the imicros-flow engine and provides a buffered work que
 
 For use by the external service the following actions are provided:
 
-- start { service, serviceToken } => { consumerId, consumerToken }
-- stop { consumerId, consumerToken } => { done, error }
-- fetch { consumerId, consumerToken } => { task }
-- commit { consumerId, consumerToken } => { task, result }
+- fetch { serviceId, workerId, timeToRecover } => value
+- ack { serviceId, workerId } => true|false
+- info { serviceId } => { INDEX, FETCHED, queued indices if not acknowledged }
 
 via the moleculer-web gateway these actions can be easily published for external access as named pathes - e.g.:
-/consumer/start
-/consumer/{consumerId}/stop
-/consumer/{consumerId}/fetch
-/consumer/{consumerId}/commit
+```
+ api/queue/{serviceId}/fetch
+ api/queue/{serviceId}/info
+```
 
-Multiple external consumers can work on the same service queue by an at least once guarantee. 
-How many consumers can be started concurrently depends on the setting `numPartitions` for the creation of new kafka topics in the publisher service, as per partition only one consumer is allowed and further consumers would be in idle. 
+Multiple external workers can work on the same service queue by an at least once guarantee. 
 
-When the external service calls the start action, the consumer service emits an `consumer.requested` event. One of the running broker services starts a new kafka consumer service with the name `<prefix>.consumerId`. A call of the to the fetch action of the consumer is then proxied to the `<prefix>.consumerId.fetch` action.
+The tasks stored in cassandra are encrypted with a owner specific key (owner is set by the acl middleware).
+For storing the current index and tracking the fetch/acknowledgements the Redis instance used by the bookkeeper must be persistent.
 
+Calling "fetch" for a worker returns the next task. Calling "fetch" again will return the same task - until with call of "ack" for this worker the task is confirmed. Then the next "fetch" returns the next task.
+If a task has not been confirmed by the worker after "timeToRecover" (default: 60s) has expired, it is delivered to the next worker. A different "timeToRecover" can be specified for each "fetch".
 
 ## Installation
 ```
 $ npm install imicros-flow-worker --save
 ```
 ## Dependencies
-Requires a running [Kafka](https://kafka.apache.org/) broker.
+Requires a running [Redis](https://redis.io/) instance for the bookkeeper.
+Requires a running [Cassandra](https://cassandra.apache.org/) node/cluster for storing the tasks.
+Requires broker middleware AclMiddleware or similar: [imicros-acl](https://github.com/al66/imicros-acl)
+Reuires a running key server for retrieving the owner encryption keys: [imicros-keys](https://github.com/al66/imicros-keys)
 
 # Usage
 
-## Usage consumer service
+## Usage add
 ```js
+let params = {
+    serviceId: serviceId,
+    value: { msg: "say hello to the world" }
+};
+let res = await broker.call("worker.queue.add", params, opts)
+expect(res).toBeDefined();
+expect(res).toEqual(true);
 
 ```
-## Actions (consumer service)
-- start { service, serviceToken } => { consumerId, consumerToken }
-- stop { consumerId, consumerToken } => { done | error }
-- fetch { consumerId, consumerToken } => { task }
-- commit { consumerId, consumerToken } => { task, result }
-## Usage publisher service
+## Usage fetch
 ```js
+let params = {
+    serviceId: serviceId,
+    workerId: "my external worker id"
+};
+let res = broker.call("worker.queue.fetch", params, opts)
+expect(res).toBeDefined();
+expect(res).toEqual({ msg: "say hello to the world" });
 
 ```
-## Actions (publisher service)
-- add { service, payload } => { topic, service, uid, timestamp, version }  
-## Usage broker service
+## Usage ack
 ```js
+let params = {
+    serviceId: serviceId,
+    workerId: "my external worker id"
+};
+let res = broker.call("worker.queue.ack", params, opts)
+expect(res).toBeDefined();
+expect(res).toEqual(true);
 
 ```
-The broker service provides no actions, it just create and start the subscriber service based on the event `consumer.requested` emitted by the consumer start action
-## Usage broker service
+## Usage info
 ```js
+let params = {
+    serviceId: serviceId,
+    workerId: "my external worker id"
+};
+let res = broker.call("worker.queue.info", params, opts)
+expect(res).toBeDefined();
+expect(res.INDEX).toEqual("1");
+expect(res.FETCHED).toEqual("1");
 
 ```

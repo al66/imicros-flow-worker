@@ -4,10 +4,6 @@
 "use strict";
 
 module.exports = {
-    // Static [kafka]
-    Publisher: require("./lib/publisher"),
-    Subscriber: require("./lib/subscriber"),
-    Broker: require("./lib/broker"),
-    Consumer: require("./lib/consumer"),
-    Admin: require("./lib/admin")
+    Queue: require("./lib/queue"),
+    Bookkeeper: require("./lib/bookkeeper/base").Bookkeeper
 };
