@@ -42,6 +42,13 @@ const Test = {
                 return fetched;
             }
         },
+        testGetCurrent: {
+            async handler() {
+                let workerId = uuid();
+                await this.fetchNext({ owner, serviceId, workerId });
+                return this.getCurrent({ owner, serviceId, workerId });
+            }
+        },
         testFetchAck: {
             async handler() {
                 let fetched = [];
@@ -89,6 +96,14 @@ const Test = {
                 await this.ack({ owner, serviceId, workerId });
                 console.log(await this.info({ owner, serviceId }));
                 return result;
+            }
+        },
+        
+        testRewind: {
+            async handler() {
+                let workerId = uuid();
+                await this.rewind({ owner, serviceId, last: "10" });
+                return this.fetchNext({ owner, serviceId, workerId });
             }
         }
 
@@ -143,10 +158,17 @@ describe("Test master/key service", () => {
             });
         });
 
+        it("it should fetch and return current", async () => {
+            return broker.call("test.testGetCurrent").then(res => {
+                expect(res).toBeDefined();
+                expect(res).toEqual("3");
+            });
+        });
+
         it("it should fetch and acknowlegde the rest", async () => {
             return broker.call("test.testFetchAck").then(res => {
                 expect(res).toBeDefined();
-                for (let i=3; i<=30; i++) {
+                for (let i=4; i<=30; i++) {
                     expect(res.filter(e => { return e === `${ i }`; }).length).toEqual(1);
                 }
                 console.log(res);
@@ -162,12 +184,20 @@ describe("Test master/key service", () => {
             });
         });
 
-        it("it should recover not acknowledged index 2", async () => {
+        it("it should recover not acknowledged index 3", async () => {
             return broker.call("test.testRecover").then(res => {
                 expect(res).toBeDefined();
-                expect(res).toEqual("2");
+                expect(res).toEqual("3");
             });
         });
+
+        it("it should start again from index 11", async () => {
+            return broker.call("test.testRewind").then(res => {
+                expect(res).toBeDefined();
+                expect(res).toEqual("11");
+            });
+        });
+        
     });
     
     describe("Test stop broker", () => {
