@@ -1,6 +1,6 @@
 {
   "name": "imicros-flow-worker",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": "Andreas Leinen <andreas.leinen@imicros.de> (www.imicros.de)",
   "license": "MIT",
   "description": "Moleculer service for persistent event handling",
@@ -37,14 +37,13 @@
     "workflow engine"
   ],
   "devDependencies": {
-    "ioredis": "^4.19.2",
+    "ioredis": "^4.22.0",
     "jest": "^25.5.4",
-    "moleculer": "^0.14.11",
+    "moleculer": "^0.14.12",
     "nats": "^1.4.12"
   },
   "dependencies": {
     "cassandra-driver": "^4.6.1",
-    "lodash": "^4.17.20",
-    "uuidv4": "^6.2.5"
+    "uuidv4": "^6.2.6"
   }
 }

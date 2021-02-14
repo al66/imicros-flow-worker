@@ -5,59 +5,12 @@ const { Queue } = require("../index");
 const { Bookkeeper } = require("../index");
 const { v4: uuid } = require("uuid");
 
-const timestamp = Date.now();
-const ownerId = `owner-${timestamp}`;
 const serviceId= uuid();
-const keys = {
-    current: uuid(),
-    previous: uuid()
-};
 
 // helper & mocks
+const { ACLMiddleware, user, ownerId } = require("./helper/acl");
 const { Activity, activity } = require("./helper/activity");
-
-const AclMock = {
-    localAction(next, action) {
-        return async function(ctx) {
-            ctx.meta = Object.assign(ctx.meta,{
-                ownerId: ownerId,
-                acl: {
-                    accessToken: "this is the access token",
-                    ownerId: ownerId,
-                    unrestricted: true
-                },
-                user: {
-                    id: `1-${timestamp}` , 
-                    email: `1-${timestamp}@host.com` 
-                }
-            });
-            ctx.broker.logger.debug("ACL meta data has been set", { meta: ctx.meta, action: action });
-            return next(ctx);
-        };
-    }    
-};
-
-// mock keys service
-const KeysMock = {
-    name: "keys",
-    actions: {
-        getOek: {
-            handler(ctx) {
-                if (!ctx.params || !ctx.params.service) throw new Error("Missing service name");
-                if ( ctx.params.id == keys.previous ) {
-                    return {
-                        id: keys.previous,
-                        key: "myPreviousSecret"
-                    };    
-                }
-                return {
-                    id: keys.current,
-                    key: "mySecret"
-                };
-            }
-        }
-    }
-};
+const { Keys } = require("./helper/keys");
 
 // collect events
 const collect = [];
@@ -83,11 +36,11 @@ describe("Test context service", () => {
 
         it("it should start the broker", async () => {
             broker = new ServiceBroker({
-                middlewares:  [AclMock],
+                middlewares:  [ACLMiddleware],
                 logger: console,
                 logLevel: "info" //"debug"
             });
-            keyService = await broker.createService(KeysMock);
+            keyService = await broker.createService(Keys);
             service = await broker.createService(Queue, Object.assign({ 
                 mixins: [Bookkeeper],
                 settings: { 
@@ -134,7 +87,7 @@ describe("Test context service", () => {
         };
         
         beforeEach(() => {
-            opts = { meta: { user: { id: `1-${timestamp}` , email: `1-${timestamp}@host.com` }, ownerId: `g-${timestamp}` } };
+            opts = { meta: { user, ownerId } };
         });
 
         it("it should add a task ", () => {
